@@ -1,1 +1,20 @@
 .context/compound-engineering/
+
+# Gradle и сборка
+.gradle/
+.kotlin/
+build/
+
+# Локальные настройки: путь к SDK, зеркало Google Maven, ключ подписи
+local.properties
+
+# Ключи подписи
+*.jks
+*.keystore
+
+# Android Studio
+.idea/
+*.iml
+
+# Сырые уведомления с телефона (KTD16): удаляются после обезличивания
+captures/
