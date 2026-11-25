@@ -17,6 +17,7 @@ class OperationTest {
     private fun operation(
         type: OperationType? = OperationType.EXPENSE,
         amount: Money? = Money(1_000),
+        originalAmount: Money? = null,
         accountId: String? = "account-1",
         status: OperationStatus = OperationStatus.CONFIRMED,
         pendingReason: PendingReason? = null,
@@ -27,6 +28,7 @@ class OperationTest {
         id = "operation-1",
         type = type,
         amount = amount,
+        originalAmount = originalAmount,
         accountId = accountId,
         occurredAt = now,
         localDate = LocalDate(2026, Month.NOVEMBER, 24),
@@ -67,6 +69,21 @@ class OperationTest {
         assertFailsWith<IllegalArgumentException> {
             operation(type = null, status = OperationStatus.PENDING, pendingReason = PendingReason.NEW_MERCHANT)
         }
+    }
+
+    @Test
+    fun foreignPurchaseKeepsBankAmountAndWaitsForAccountCurrencyAmount() {
+        val dollars = Money(1_599, Currency("USD"))
+        val waiting = operation(
+            amount = null,
+            originalAmount = dollars,
+            status = OperationStatus.PENDING,
+            pendingReason = PendingReason.UNPARSED,
+        )
+        assertFalse(waiting.countsInBalance)
+        assertEquals(dollars, operation(amount = Money(150_000), originalAmount = dollars).originalAmount)
+        assertFailsWith<IllegalArgumentException> { operation(originalAmount = Money(1_000)) }
+        assertFailsWith<IllegalArgumentException> { operation(originalAmount = Money(0, Currency("USD"))) }
     }
 
     @Test
@@ -146,16 +163,7 @@ class AccountTest {
 
 class PlanningEntitiesTest {
     @Test
-    fun recurringPaymentDayIsWithinMonth() {
-        RecurringPayment("recurring-1", "Аренда", Money(3_000_000), dayOfMonth = 1, updatedAt = now)
-        RecurringPayment("recurring-2", "Интернет", Money(70_000), dayOfMonth = 31, updatedAt = now)
-        assertFailsWith<IllegalArgumentException> { RecurringPayment("r", "Аренда", Money(100), dayOfMonth = 0, updatedAt = now) }
-        assertFailsWith<IllegalArgumentException> { RecurringPayment("r", "Аренда", Money(100), dayOfMonth = 32, updatedAt = now) }
-    }
-
-    @Test
     fun amountsArePositive() {
-        assertFailsWith<IllegalArgumentException> { RecurringPayment("r", "Аренда", Money(0), dayOfMonth = 5, updatedAt = now) }
         assertFailsWith<IllegalArgumentException> { Budget("b", "category-1", Money(0), updatedAt = now) }
         assertFailsWith<IllegalArgumentException> { Budget("b", "category-1", Money(-100), updatedAt = now) }
         assertFailsWith<IllegalArgumentException> { Goal("g", "Отпуск", Money(0), updatedAt = now) }

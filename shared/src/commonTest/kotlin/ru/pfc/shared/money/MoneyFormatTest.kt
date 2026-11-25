@@ -46,4 +46,9 @@ class MoneyFormatTest {
     fun showsCurrencyCodeForNonRubleAmounts() {
         assertEquals("15,99${NBSP}USD", Money(1_599, Currency("USD")).format())
     }
+
+    @Test
+    fun currencyWithoutFractionIsStoredInHundredths() {
+        assertEquals("1${NBSP}500${NBSP}JPY", Money(150_000, Currency("JPY")).format())
+    }
 }

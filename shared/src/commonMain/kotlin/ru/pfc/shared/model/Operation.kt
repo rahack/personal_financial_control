@@ -33,10 +33,12 @@ enum class PendingReason(val countsInBalance: Boolean) {
 /**
  * Операция по счёту (KTD7).
  *
- * [amount] у расхода, дохода и перевода положительный, направление задают [type] и [transferDirection].
+ * [amount] всегда в валюте счёта. У расхода, дохода и перевода он положительный, направление задают [type] и [transferDirection].
  * У корректировки [amount] — разница со знаком, а [balanceAfter] — остаток счёта на момент корректировки:
- * баланс равен остатку последней корректировки плюс операции после неё.
+ * баланс равен остатку последней корректировки плюс операции строго позже неё.
  * У неразобранного уведомления (UNPARSED) тип и сумма могут быть неизвестны.
+ * [originalAmount] — сумма в иностранной валюте, как её прислал банк (A13). Пока пользователь не указал,
+ * сколько списано в валюте счёта, [amount] нет и операция ждёт во «Входящих» как UNPARSED.
  *
  * Перевод: [accountId] — свой счёт, с которого (OUT) или на который (IN) идут деньги;
  * [transferAccountId] — другой свой счёт или null, если вторая сторона вне приложения.
@@ -48,6 +50,7 @@ data class Operation(
     override val id: String,
     val type: OperationType?,
     val amount: Money?,
+    val originalAmount: Money? = null,
     val accountId: String?,
     val occurredAt: Instant,
     val localDate: LocalDate,
@@ -78,6 +81,12 @@ data class Operation(
         }
         require(amount == null || type == OperationType.ADJUSTMENT || amount.minorUnits > 0) {
             "Сумма расхода, дохода и перевода положительна"
+        }
+        require(originalAmount == null || originalAmount.minorUnits > 0) {
+            "Сумма в иностранной валюте положительна"
+        }
+        require(originalAmount == null || amount == null || originalAmount.currency != amount.currency) {
+            "Исходная сумма хранится, только если её валюта отличается от валюты счёта"
         }
         require((type == OperationType.ADJUSTMENT) == (balanceAfter != null)) {
             "Остаток на момент операции хранит только корректировка"
