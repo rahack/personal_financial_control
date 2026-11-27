@@ -5,7 +5,17 @@ pluginManagement {
         .apply { settingsDir.resolve("local.properties").takeIf { it.exists() }?.reader()?.use { load(it) } }
         .getProperty("googleMavenMirror")
     repositories {
-        if (googleMavenMirror != null) maven(googleMavenMirror) else google()
+        if (googleMavenMirror != null) {
+            maven(googleMavenMirror) {
+                content {
+                    includeGroupByRegex("androidx\\..*")
+                    includeGroupByRegex("com\\.android(\\..*)?")
+                    includeGroupByRegex("com\\.google\\..*")
+                }
+            }
+        } else {
+            google()
+        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -19,7 +29,19 @@ val googleMavenMirror: String? = java.util.Properties()
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
-        if (googleMavenMirror != null) maven(googleMavenMirror) else google()
+        // Зеркало отдаёт только артефакты Google. Остальные библиотеки сразу берутся из Maven Central:
+        // запрос к зеркалу за чужим артефактом может зависнуть и сорвать сборку.
+        if (googleMavenMirror != null) {
+            maven(googleMavenMirror) {
+                content {
+                    includeGroupByRegex("androidx\\..*")
+                    includeGroupByRegex("com\\.android(\\..*)?")
+                    includeGroupByRegex("com\\.google\\..*")
+                }
+            }
+        } else {
+            google()
+        }
         mavenCentral()
     }
 }

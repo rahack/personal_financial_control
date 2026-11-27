@@ -22,6 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
+            api(libs.kotlinx.coroutines.core)
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
         }

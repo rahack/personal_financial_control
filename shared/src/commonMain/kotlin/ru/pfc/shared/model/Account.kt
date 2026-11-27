@@ -28,3 +28,26 @@ data class Account(
         require(creditLimit == null || creditLimit.currency == currency) { "Лимит в валюте, отличной от валюты счёта" }
     }
 }
+
+/** Последние четыре цифры карты: по ним конвейер находит счёт операции из уведомления (KTD14, шаг 2). */
+data class CardMask(
+    override val id: String,
+    val accountId: String,
+    val lastDigits: String,
+    override val updatedAt: Instant,
+    override val deletedAt: Instant? = null,
+) : SyncedEntity {
+    init {
+        require(lastDigits.length == 4 && lastDigits.all { it in '0'..'9' }) { "Маска карты — четыре цифры" }
+    }
+}
+
+/** Остаток из уведомления банка [bankBalance], который разошёлся с балансом счёта на момент уведомления (R10). */
+data class BalanceDiscrepancy(
+    override val id: String,
+    val accountId: String,
+    val bankBalance: Money,
+    val notifiedAt: Instant,
+    override val updatedAt: Instant,
+    override val deletedAt: Instant? = null,
+) : SyncedEntity

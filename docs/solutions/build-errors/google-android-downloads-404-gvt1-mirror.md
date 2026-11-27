@@ -61,7 +61,17 @@ pluginManagement {
         .apply { settingsDir.resolve("local.properties").takeIf { it.exists() }?.reader()?.use { load(it) } }
         .getProperty("googleMavenMirror")
     repositories {
-        if (googleMavenMirror != null) maven(googleMavenMirror) else google()
+        if (googleMavenMirror != null) {
+            maven(googleMavenMirror) {
+                content {
+                    includeGroupByRegex("androidx\\..*")
+                    includeGroupByRegex("com\\.android(\\..*)?")
+                    includeGroupByRegex("com\\.google\\..*")
+                }
+            }
+        } else {
+            google()
+        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -69,6 +79,8 @@ pluginManagement {
 ```
 
 Блок `pluginManagement` вычисляется отдельно от остального файла и не видит его переменных, поэтому для `dependencyResolutionManagement` свойство читается второй раз. В CI `local.properties` нет, и там остаётся обычный `google()`.
+
+Фильтр `content` отдаёт зеркалу только группы Google. Без него Gradle сначала спрашивает зеркало о любой библиотеке. 2026-11-26 запрос за `kotlinx-coroutines-bom` к зеркалу завис по тайм-ауту, и сборка упала, хотя Maven Central отвечал. Группы `com.google.*` из Maven Central (KSP, Guava, Gson) по-прежнему идут сначала на зеркало.
 
 ## Why This Works
 

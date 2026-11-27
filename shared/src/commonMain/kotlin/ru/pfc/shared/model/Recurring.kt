@@ -54,3 +54,13 @@ data class Recurring(
         return anchorDate.plus(index, unit)
     }
 }
+
+/** Регулярная запись на дату [dueDate] выполнена: с ней связана операция [operationId] или пользователь нажал «Оплачено» (KTD9). */
+data class RecurringFulfillment(
+    override val id: String,
+    val recurringId: String,
+    val dueDate: LocalDate,
+    val operationId: String? = null,
+    override val updatedAt: Instant,
+    override val deletedAt: Instant? = null,
+) : SyncedEntity

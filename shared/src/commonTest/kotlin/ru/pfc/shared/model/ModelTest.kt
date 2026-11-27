@@ -159,6 +159,22 @@ class AccountTest {
             Account("account-1", "Карта", AccountType.CREDIT_CARD, creditLimit = Money(100, Currency("USD")), updatedAt = now)
         }
     }
+
+    @Test
+    fun cardMaskIsFourDigits() {
+        CardMask("mask-1", "account-1", "0042", updatedAt = now)
+        for (digits in listOf("042", "00421", "00a2", "")) {
+            assertFailsWith<IllegalArgumentException>(digits) { CardMask("mask-1", "account-1", digits, updatedAt = now) }
+        }
+    }
+}
+
+class CategoryTest {
+    @Test
+    fun merchantRuleNeedsMerchantKey() {
+        MerchantRule("rule-1", "пятерочка", "category-1", updatedAt = now)
+        assertFailsWith<IllegalArgumentException> { MerchantRule("rule-1", " ", "category-1", updatedAt = now) }
+    }
 }
 
 class PlanningEntitiesTest {
@@ -168,7 +184,10 @@ class PlanningEntitiesTest {
         assertFailsWith<IllegalArgumentException> { Budget("b", "category-1", Money(-100), updatedAt = now) }
         assertFailsWith<IllegalArgumentException> { Goal("g", "Отпуск", Money(0), updatedAt = now) }
         assertFailsWith<IllegalArgumentException> { Goal("g", "Отпуск", Money(-100), updatedAt = now) }
+        val day = LocalDate(2026, Month.NOVEMBER, 24)
+        assertFailsWith<IllegalArgumentException> { GoalContribution("c", "goal-1", Money(0), day, updatedAt = now) }
         Budget("budget-1", "category-1", Money(1_500_000), updatedAt = now)
         Goal("goal-1", "Отпуск", Money(9_000_000), updatedAt = now)
+        GoalContribution("contribution-1", "goal-1", Money(500_000), day, updatedAt = now)
     }
 }

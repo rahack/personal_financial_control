@@ -17,3 +17,17 @@ data class Goal(
         require(target.minorUnits > 0) { "Сумма цели положительна" }
     }
 }
+
+/** Взнос на цель (R26). */
+data class GoalContribution(
+    override val id: String,
+    val goalId: String,
+    val amount: Money,
+    val localDate: LocalDate,
+    override val updatedAt: Instant,
+    override val deletedAt: Instant? = null,
+) : SyncedEntity {
+    init {
+        require(amount.minorUnits > 0) { "Сумма взноса положительна" }
+    }
+}
